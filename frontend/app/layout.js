@@ -17,6 +17,9 @@ export const metadata = {
     "boutique in Villupuram",
     "bridal blouse design",
     "custom stitching",
+    "kaviya boutique",
+    "kaviya boutique villupuram",
+    "kaviya__boutique",
     "embroidery services",
   ],
 
