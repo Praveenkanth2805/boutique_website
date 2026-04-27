@@ -11,21 +11,29 @@ export default function NewService() {
   const [images, setImages] = useState([]);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    const formData = new FormData();
-    formData.append('name', form.name);
-    formData.append('description', form.description);
-    formData.append('price', form.price);
-    for (let i = 0; i < images.length; i++) {
-      formData.append('images', images[i]);
-    }
-    const token = localStorage.getItem('adminToken');
+  e.preventDefault();
+  const formData = new FormData();
+  formData.append('name', form.name);
+  formData.append('description', form.description);
+  formData.append('price', form.price);
+  for (let i = 0; i < images.length; i++) {
+    formData.append('images', images[i]);
+  }
+  const token = localStorage.getItem('adminToken');
+  try {
     await api.post('/admin/services', formData, {
       headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` },
     });
     toast.success('Service created');
     router.push('/admin/services');
-  };
+  } catch (err) {
+    if (err.response?.status === 413) {
+      toast.error('File too large. Max size 5MB.');
+    } else {
+      toast.error(err.response?.data?.message || 'Creation failed');
+    }
+  }
+};
 
   return (
     <AdminRoute>
