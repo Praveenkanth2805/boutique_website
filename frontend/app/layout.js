@@ -3,6 +3,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { AuthProvider } from '@/context/AuthContext';
 import { Toaster } from 'react-hot-toast';
+import DynamicTitle from "@/components/DynamicTitle";
 
 export const metadata = {
   title: {
@@ -39,7 +40,6 @@ export const metadata = {
         height: 630,
       },
     ],
-
     type: "website",
   },
 };
@@ -49,6 +49,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         <AuthProvider>
+          <DynamicTitle />
           <Navbar />
           <main className="min-h-screen">{children}</main>
           <Footer />
