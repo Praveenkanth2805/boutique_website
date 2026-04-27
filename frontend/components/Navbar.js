@@ -12,9 +12,9 @@ export default function Navbar() {
   // For admin pages, show admin navigation
   if (isAdmin || pathname?.startsWith('/admin')) {
     return (
-      <nav className="bg-gray-800 text-white shadow-md sticky top-0 z-50">
+      <nav className="bg-white-800 text-black shadow-md sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-          <Link href="/admin" className="text-xl font-serif font-bold">Admin Panel</Link>
+          <Link href="/admin" className="text-2xl font-serif text-rose font-bold">Admin Panel</Link>
           <div className="hidden md:flex space-x-6">
             <Link href="/admin" className="hover:text-rose">Dashboard</Link>
             <Link href="/admin/services" className="hover:text-rose">Services</Link>
