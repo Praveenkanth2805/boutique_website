@@ -43,5 +43,5 @@ next-env.d.ts
 node_modules/
 .next/
 .env.local
-.icon.png 
-.logo.png
+/.icon.png 
+/.logo.png
