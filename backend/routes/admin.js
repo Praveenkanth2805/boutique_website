@@ -155,4 +155,11 @@ router.get('/stats', adminAuth, async (req, res) => {
   }
 });
 
+router.get('/contact', adminAuth, async (req, res) => {
+  const messages = await prisma.contactMessage.findMany({
+    orderBy: { createdAt: 'desc' }
+  });
+  res.json(messages);
+});
+
 module.exports = router;

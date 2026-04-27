@@ -63,3 +63,11 @@ model Enquiry {
   mobile     String
   createdAt  DateTime @default(now())
 }
+
+model ContactMessage {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  message   String
+  createdAt DateTime @default(now())
+}

@@ -19,6 +19,7 @@ export default function Navbar() {
             <Link href="/admin" className="hover:text-rose">Dashboard</Link>
             <Link href="/admin/services" className="hover:text-rose">Services</Link>
             <Link href="/admin/enquiries" className="hover:text-rose">Enquiries</Link>
+            <Link href="/admin/contact" className="hover:text-rose">Contact Msgs</Link>
             <button onClick={logout} className="hover:text-rose">Logout</button>
           </div>
           <button className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>☰</button>

@@ -14,6 +14,7 @@ const adminRoutes = require('./routes/admin');
 
 const app = express();
 const prisma = new PrismaClient();
+const contactRoutes = require('./routes/contact');
 
 // Middleware
 app.use(helmet());
@@ -30,6 +31,7 @@ app.use('/api/enquiry', rateLimit);
 app.use('/api/auth', authRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/enquiries', enquiryRoutes);
+app.use('/api/contact', contactRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Global error handler

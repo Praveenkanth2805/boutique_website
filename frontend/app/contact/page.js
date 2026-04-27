@@ -6,15 +6,20 @@ import api from '@/utils/api';
 export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', message: '' });
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await api.post('/contact', form); // you'd need a contact endpoint, but for demo just toast
-      toast.success('Message sent!');
-      setForm({ name: '', email: '', message: '' });
-    } catch {
-      toast.error('Failed to send');
+  e.preventDefault();
+  try {
+    await api.post('/contact', form);
+    toast.success('Message sent! We will get back to you soon.');
+    setForm({ name: '', email: '', message: '' });
+  } catch (err) {
+    if (err.response?.data?.errors) {
+      const fieldErrors = err.response.data.errors;
+      fieldErrors.forEach(errObj => toast.error(errObj.msg));
+    } else {
+      toast.error(err.response?.data?.message || 'Failed to send message');
     }
-  };
+  }
+};
   return (
     <div className="container mx-auto px-4 py-12 max-w-2xl">
       <h1 className="text-4xl font-serif text-rose mb-6 text-center">Contact Us</h1>
@@ -28,7 +33,7 @@ export default function Contact() {
         <div className="mt-8 text-center">
           <p className="text-gray-600">Or reach us directly:</p>
           <p className="font-semibold">Email: hello@boutique.com</p>
-          <p className="font-semibold">Instagram: <a href={process.env.NEXT_PUBLIC_INSTAGRAM_URL} target="_blank" className="text-rose">@boutique</a></p>
+          <p className="font-semibold">Instagram: <a href={process.env.NEXT_PUBLIC_INSTAGRAM_URL} target="_blank" className="text-rose">@kaviya__boutique</a></p>
         </div>
       </div>
     </div>

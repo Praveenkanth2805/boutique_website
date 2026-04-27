@@ -18,4 +18,60 @@ async function sendOTPEmail(to, otp) {
   await transporter.sendMail(mailOptions);
 }
 
-module.exports = { sendOTPEmail };
+// Add at the bottom of the file
+async function sendContactEmail(name, email, message) {
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Poppins', Arial, sans-serif; background-color: #f9f9f9; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .header { background: linear-gradient(135deg, #E75480, #F8C8DC); padding: 30px; text-align: center; }
+        .header h1 { color: white; margin: 0; font-size: 28px; font-family: 'Playfair Display', serif; }
+        .content { padding: 30px; }
+        .message-box { background: #fef4f7; padding: 20px; border-radius: 15px; border-left: 4px solid #E75480; margin: 20px 0; }
+        .field { margin-bottom: 15px; }
+        .field-label { font-weight: 600; color: #E75480; display: inline-block; width: 80px; }
+        .footer { background: #f8f8f8; padding: 20px; text-align: center; font-size: 12px; color: #888; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>✨ New Contact Message ✨</h1>
+        </div>
+        <div class="content">
+          <div class="field">
+            <span class="field-label">👤 Name:</span> ${name}
+          </div>
+          <div class="field">
+            <span class="field-label">📧 Email:</span> ${email}
+          </div>
+          <div class="message-box">
+            <strong>💬 Message:</strong><br>
+            ${message.replace(/\n/g, '<br>')}
+          </div>
+        </div>
+        <div class="footer">
+          <p>Boutique Website | You received this because someone contacted you via the contact form.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const mailOptions = {
+    from: `"Boutique Contact" <${process.env.EMAIL_USER}>`,
+    to: process.env.ADMIN_EMAIL,
+    subject: `💌 New Contact Message from ${name}`,
+    html: htmlContent,
+  };
+
+  const info = await transporter.sendMail(mailOptions);
+  console.log('Email sent:', info.messageId);
+  return info;
+}
+
+module.exports = { sendOTPEmail, sendContactEmail };
