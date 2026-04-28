@@ -47,7 +47,7 @@ export default function Navbar() {
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <Link href="/" className="flex items-center gap-2">
           <Image src="/logo.png" alt="Boutique Logo" width={40} height={40} className="rounded-full" />
-          <span className="text-2xl font-serif text-rose font-bold">Boutique</span>
+          <span className="text-2xl font-serif text-rose font-bold">{process.env.NEXT_PUBLIC_NAME}</span>
         </Link>
         <div className="hidden md:flex space-x-8">
           <Link href="/" className="hover:text-rose">Home</Link>
