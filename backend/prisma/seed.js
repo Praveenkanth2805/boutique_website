@@ -4,10 +4,10 @@ const prisma = new PrismaClient();
 
 async function main() {
   // Create admin user if not exists
-  const adminEmail = 'praveenkanth2805@gmail.com';
+  const adminEmail = 'admin@example.com';
   const existingAdmin = await prisma.admin.findUnique({ where: { email: adminEmail } });
   if (!existingAdmin) {
-    const hashedPassword = await bcrypt.hash('praveenkaviya2811', 10);
+    const hashedPassword = await bcrypt.hash('admin#123', 10);
     await prisma.admin.create({
       data: {
         email: adminEmail,
@@ -15,7 +15,7 @@ async function main() {
         otpVerified: true,
       },
     });
-    console.log('Admin created');
+    console.log('Admin created: admin@example.com / admin123');
   }
 
   // Optional: create a demo service

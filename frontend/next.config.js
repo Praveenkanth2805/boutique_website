@@ -1,41 +1,37 @@
-// /** @type {import('next').NextConfig} */
-// const nextConfig = {
-//   images: {
-//     remotePatterns: [
-//       {
-//         protocol: 'http',
-//         hostname: 'localhost',
-//         port: '5000',
-//         pathname: '/uploads/**',
-//       },
-//       {
-//         protocol: 'https',
-//         hostname: 'your-backend.onrender.com',
-//         pathname: '/uploads/**',
-//       },
-//       // Add any other domains you use (e.g., placehold.co for fallback)
-//       {
-//         protocol: 'https',
-//         hostname: 'placehold.co',
-//       },
-//     ],
-//   },
-// };
+const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+const supabaseStorageUrl = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL;
 
-// module.exports = nextConfig;
+const backendHostname = backendUrl
+  ?.replace('https://', '')
+  ?.replace('http://', '');
 
-/** @type {import('next').NextConfig} */
+const supabaseHostname = supabaseStorageUrl
+  ?.replace('https://', '')
+  ?.replace('http://', '')
+  ?.split('/')[0]; // IMPORTANT
+
 const nextConfig = {
   images: {
     remotePatterns: [
       {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '5000',
+        pathname: '/uploads/**',
+      },
+      {
         protocol: 'https',
-        hostname: process.env.NEXT_PUBLIC_BACKEND_HOST || 'your-backend.onrender.com',
+        hostname: backendHostname || 'your-backend.onrender.com',
         pathname: '/uploads/**',
       },
       {
         protocol: 'https',
         hostname: 'placehold.co',
+      },
+      {
+        protocol: 'https',
+        hostname: supabaseHostname || 'abc123.supabase.co',
+        pathname: '/storage/v1/object/public/**',
       },
     ],
   },
