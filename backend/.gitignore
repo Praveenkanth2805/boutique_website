@@ -3,3 +3,4 @@ node_modules/
 uploads/
 dev.db
 dev.db-journal
+.seedlocal.js 
