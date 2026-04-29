@@ -13,11 +13,11 @@ export default function Navbar() {
   // Admin navbar
   if (isAdmin || pathname?.startsWith('/admin')) {
     return (
-      <nav className="bg-white-800 shadow-md sticky top-0 z-50">
+      <nav className="bg-white shadow-md sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
           <Link href="/admin" className="flex items-center gap-2">
             <Image src="/logo.png" alt="Logo" width={32} height={32} className="rounded-full" />
-            <span className="text-xl font-serif font-bold">Admin Panel</span>
+            <span className="text-xl font-serif font-bold text-rose">Admin Panel</span>
           </Link>
           <div className="hidden md:flex space-x-6">
             <Link href="/admin" className="hover:text-rose">Dashboard</Link>
@@ -29,7 +29,7 @@ export default function Navbar() {
           <button className="md:hidden text-2xl" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>☰</button>
         </div>
         {mobileMenuOpen && (
-          <div className="md:hidden bg-gray-800 py-4 px-4 flex flex-col space-y-3">
+          <div className="md:hidden bg-white py-4 px-4 flex flex-col space-y-3">
             <Link href="/admin" onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
             <Link href="/admin/services" onClick={() => setMobileMenuOpen(false)}>Services</Link>
             <Link href="/admin/enquiries" onClick={() => setMobileMenuOpen(false)}>Enquiries</Link>
