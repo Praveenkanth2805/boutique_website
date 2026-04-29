@@ -1,38 +1,22 @@
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-const supabaseStorageUrl = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL;
-
-const backendHostname = backendUrl
-  ?.replace('https://', '')
-  ?.replace('http://', '');
-
-const supabaseHostname = supabaseStorageUrl
-  ?.replace('https://', '')
-  ?.replace('http://', '')
-  ?.split('/')[0]; // IMPORTANT
-
+/** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
     remotePatterns: [
-      {
-        protocol: 'http',
-        hostname: 'localhost',
-        port: '5000',
-        pathname: '/uploads/**',
-      },
+      // 👇 Production / Supabase Storage (always active)
       {
         protocol: 'https',
-        hostname: backendHostname || 'your-backend.onrender.com',
-        pathname: '/uploads/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'placehold.co',
-      },
-      {
-        protocol: 'https',
-        hostname: supabaseHostname || 'abc123.supabase.co',
+        hostname: '**.supabase.co',     // matches any Supabase project
+        port: '',
         pathname: '/storage/v1/object/public/**',
       },
+
+      // 👇 Local development (if you ever need local images, uncomment this block)
+      // {
+      //   protocol: 'http',
+      //   hostname: 'localhost',
+      //   port: '5000',
+      //   pathname: '/uploads/**',
+      // },
     ],
   },
 };
