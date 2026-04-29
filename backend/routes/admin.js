@@ -1,14 +1,49 @@
 const express = require('express');
 const adminAuth = require('../middleware/adminAuth');
 const upload = require('../middleware/upload');
-const { processImage } = require('../utils/imageProcessor');
 const { PrismaClient } = require('@prisma/client');
-const multer = require('multer'); // <-- ADD THIS LINE
+const multer = require('multer');
+const { createClient } = require('@supabase/supabase-js');
+const sharp = require('sharp');
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// Create service
+// ========== SUPABASE SETUP ==========
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+const BUCKET_NAME = process.env.SUPABASE_BUCKET || 'service-images';
+
+// Helper: upload image buffer to Supabase Storage, return public URL
+async function uploadToSupabase(buffer, originalName) {
+  // Convert to WebP, resize, compress
+  const webpBuffer = await sharp(buffer)
+    .resize(800, null, { withoutEnlargement: true })
+    .webp({ quality: 80 })
+    .toBuffer();
+
+  const timestamp = Date.now();
+  const random = Math.round(Math.random() * 1e9);
+  const fileName = `${timestamp}-${random}.webp`;
+
+  const { error } = await supabase.storage
+    .from(BUCKET_NAME)
+    .upload(fileName, webpBuffer, {
+      contentType: 'image/webp',
+      cacheControl: '3600',
+    });
+
+  if (error) throw error;
+
+  const { data: { publicUrl } } = supabase.storage
+    .from(BUCKET_NAME)
+    .getPublicUrl(fileName);
+  return publicUrl;
+}
+
+// ========== CREATE SERVICE ==========
 router.post('/services', adminAuth, (req, res, next) => {
   upload.array('images', 10)(req, res, (err) => {
     if (err instanceof multer.MulterError) {
@@ -32,10 +67,10 @@ router.post('/services', adminAuth, (req, res, next) => {
       data: { name, description, price: parseFloat(price) },
     });
     for (let i = 0; i < files.length; i++) {
-      const processedUrl = await processImage(files[i].path);
+      const publicUrl = await uploadToSupabase(files[i].buffer, files[i].originalname);
       const isPrimary = i === 0;
       await prisma.serviceImage.create({
-        data: { serviceId: service.id, imageUrl: processedUrl, isPrimary },
+        data: { serviceId: service.id, imageUrl: publicUrl, isPrimary },
       });
     }
     res.status(201).json(service);
@@ -45,7 +80,7 @@ router.post('/services', adminAuth, (req, res, next) => {
   }
 });
 
-// Update service
+// ========== UPDATE SERVICE ==========
 router.put('/services/:id', adminAuth, (req, res, next) => {
   upload.array('newImages', 10)(req, res, (err) => {
     if (err instanceof multer.MulterError) {
@@ -63,7 +98,6 @@ router.put('/services/:id', adminAuth, (req, res, next) => {
     const { id } = req.params;
     const { name, description, price, primaryImageId } = req.body;
 
-    // Build update object with only provided fields
     const updateData = {};
     if (name && name.trim()) updateData.name = name.trim();
     if (description && description.trim()) updateData.description = description.trim();
@@ -71,7 +105,6 @@ router.put('/services/:id', adminAuth, (req, res, next) => {
       updateData.price = parseFloat(price);
     }
 
-    // Only update if there are fields to change
     if (Object.keys(updateData).length > 0) {
       await prisma.service.update({
         where: { id: parseInt(id) },
@@ -79,7 +112,6 @@ router.put('/services/:id', adminAuth, (req, res, next) => {
       });
     }
 
-    // Set primary image if requested
     if (primaryImageId) {
       await prisma.serviceImage.updateMany({
         where: { serviceId: parseInt(id) },
@@ -91,12 +123,11 @@ router.put('/services/:id', adminAuth, (req, res, next) => {
       });
     }
 
-    // Upload new images
     if (req.files && req.files.length) {
       for (const file of req.files) {
-        const processedUrl = await processImage(file.path);
+        const publicUrl = await uploadToSupabase(file.buffer, file.originalname);
         await prisma.serviceImage.create({
-          data: { serviceId: parseInt(id), imageUrl: processedUrl, isPrimary: false },
+          data: { serviceId: parseInt(id), imageUrl: publicUrl, isPrimary: false },
         });
       }
     }
@@ -108,20 +139,34 @@ router.put('/services/:id', adminAuth, (req, res, next) => {
   }
 });
 
-// Delete service
+// ========== DELETE SERVICE (also delete from Supabase) ==========
 router.delete('/services/:id', adminAuth, async (req, res) => {
   try {
+    const images = await prisma.serviceImage.findMany({
+      where: { serviceId: parseInt(req.params.id) },
+    });
+    // Delete images from Supabase Storage (optional but good)
+    for (const img of images) {
+      const fileName = img.imageUrl.split('/').pop();
+      await supabase.storage.from(BUCKET_NAME).remove([fileName]).catch(() => {});
+    }
     await prisma.service.delete({ where: { id: parseInt(req.params.id) } });
     res.json({ message: 'Service deleted' });
   } catch (error) {
+    console.error('Delete error:', error);
     res.status(500).json({ message: 'Delete failed' });
   }
 });
 
-// Delete a single service image
+// ========== DELETE SINGLE IMAGE ==========
 router.delete('/services/images/:imageId', adminAuth, async (req, res) => {
   try {
     const { imageId } = req.params;
+    const image = await prisma.serviceImage.findUnique({ where: { id: parseInt(imageId) } });
+    if (image) {
+      const fileName = image.imageUrl.split('/').pop();
+      await supabase.storage.from(BUCKET_NAME).remove([fileName]).catch(() => {});
+    }
     await prisma.serviceImage.delete({ where: { id: parseInt(imageId) } });
     res.json({ message: 'Image deleted successfully' });
   } catch (error) {
@@ -130,7 +175,7 @@ router.delete('/services/images/:imageId', adminAuth, async (req, res) => {
   }
 });
 
-// Get all enquiries
+// ========== KEEP YOUR EXISTING ROUTES (enquiries, stats, contact) ==========
 router.get('/enquiries', adminAuth, async (req, res) => {
   try {
     const enquiries = await prisma.enquiry.findMany({
@@ -143,7 +188,6 @@ router.get('/enquiries', adminAuth, async (req, res) => {
   }
 });
 
-// Dashboard stats
 router.get('/stats', adminAuth, async (req, res) => {
   try {
     const totalServices = await prisma.service.count();
@@ -156,10 +200,14 @@ router.get('/stats', adminAuth, async (req, res) => {
 });
 
 router.get('/contact', adminAuth, async (req, res) => {
-  const messages = await prisma.contactMessage.findMany({
-    orderBy: { createdAt: 'desc' }
-  });
-  res.json(messages);
+  try {
+    const messages = await prisma.contactMessage.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(messages);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch contact messages' });
+  }
 });
 
 module.exports = router;

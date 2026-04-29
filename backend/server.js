@@ -11,10 +11,10 @@ const authRoutes = require('./routes/auth');
 const serviceRoutes = require('./routes/services');
 const enquiryRoutes = require('./routes/enquiries');
 const adminRoutes = require('./routes/admin');
+const contactRoutes = require('./routes/contact');
 
 const app = express();
 const prisma = new PrismaClient();
-const contactRoutes = require('./routes/contact');
 
 // Middleware
 app.use(helmet());
