@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 import api from '@/utils/api';
 
-export default function EnquiryForm({ serviceId, serviceName }) {
+export default function EnquiryForm({ serviceId, designId, serviceName }) {
   const { user } = useAuth();
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -16,7 +16,7 @@ export default function EnquiryForm({ serviceId, serviceName }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/enquiries', { ...formData, serviceId });
+      await api.post('/enquiries', { ...formData, serviceId, designId });
       toast.success('Enquiry sent! We will contact you soon.');
       setFormData({ name: '', address: '', pincode: '', mobile: '' });
     } catch (err) {

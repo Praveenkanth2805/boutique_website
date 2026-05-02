@@ -6,7 +6,7 @@ const auth = require('../middleware/auth');
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// Create enquiry (public, but user id optional if logged in)
+// Create enquiry (public, user id optional if logged in)
 router.post(
   '/',
   [
@@ -19,13 +19,14 @@ router.post(
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { name, address, pincode, mobile, serviceId } = req.body;
+    const { name, address, pincode, mobile, serviceId, designId } = req.body;
     const userId = req.user?.id || null;
 
     const enquiry = await prisma.enquiry.create({
       data: {
         userId,
         serviceId: serviceId ? parseInt(serviceId) : null,
+        designId: designId ? parseInt(designId) : null,
         name,
         address,
         pincode,
