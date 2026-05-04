@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import EnquiryForm from '@/components/EnquiryForm';
 import api from '@/utils/api';
@@ -10,6 +10,8 @@ export default function ServiceGallery({ params }) {
   const [selectedDesign, setSelectedDesign] = useState(null);
   const [priceRange, setPriceRange] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const filterRef = useRef(null);
 
   useEffect(() => {
     const fetchService = async () => {
@@ -28,10 +30,21 @@ export default function ServiceGallery({ params }) {
     fetchService();
   }, [params.id]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (filterRef.current && !filterRef.current.contains(event.target)) {
+        setFilterOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   if (loading) return <div className="text-center py-20">Loading designs...</div>;
   if (!service) return <div className="text-center py-20">Service not found</div>;
 
-  // Filter by price range
+  // Filter logic
   let filteredDesigns = service.designs;
   if (priceRange !== 'all') {
     const [minStr, maxStr] = priceRange.split('-');
@@ -39,36 +52,53 @@ export default function ServiceGallery({ params }) {
     const max = maxStr === 'plus' ? Infinity : parseFloat(maxStr);
     filteredDesigns = service.designs.filter(d => d.price >= min && d.price <= max);
   }
-  // Ensure highest price first
   filteredDesigns.sort((a, b) => b.price - a.price);
+
+  const filterOptions = [
+    { label: 'All', value: 'all' },
+    { label: 'Under ₹5,000', value: '0-5000' },
+    { label: '₹5,001 – ₹10,000', value: '5001-10000' },
+    { label: '₹10,001 – ₹20,000', value: '10001-20000' },
+    { label: 'Above ₹20,000', value: '20001-plus' },
+  ];
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-serif text-rose text-center mb-4">{service.title}</h1>
       {service.description && <p className="text-center text-gray-600 mb-8">{service.description}</p>}
 
-      {/* Filter bar - responsive */}
-      <div className="flex flex-wrap justify-center gap-2 mb-8">
-        {[
-          { label: 'All', value: 'all' },
-          { label: 'Under ₹5,000', value: '0-5000' },
-          { label: '₹5,001 – ₹10,000', value: '5001-10000' },
-          { label: '₹10,001 – ₹20,000', value: '10001-20000' },
-          { label: 'Above ₹20,000', value: '20001-plus' },
-        ].map((range) => (
-          <button
-            key={range.value}
-            onClick={() => setPriceRange(range.value)}
-            className={`px-4 py-2 rounded-full transition ${priceRange === range.value ? 'bg-rose text-white' : 'bg-gray-200 hover:bg-gray-300'}`}
-          >
-            {range.label}
-          </button>
-        ))}
+      {/* Filter Icon & Dropdown */}
+      <div className="flex justify-end mb-4 relative" ref={filterRef}>
+        <button
+          onClick={() => setFilterOpen(!filterOpen)}
+          className="flex items-center gap-2 bg-white border border-gray-300 rounded-full px-4 py-2 shadow-sm hover:shadow-md transition"
+        >
+          <span className="text-xl">⚙️</span>
+          <span className="text-sm font-medium">Filter</span>
+          <span className="text-xs">{filterOpen ? '▲' : '▼'}</span>
+        </button>
+        {filterOpen && (
+          <div className="absolute top-full right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-20 w-48">
+            {filterOptions.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => {
+                  setPriceRange(option.value);
+                  setFilterOpen(false);
+                }}
+                className={`block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition ${
+                  priceRange === option.value ? 'bg-rose/10 text-rose font-semibold' : ''
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Two column layout */}
+      {/* Two column layout (unchanged) */}
       <div className="grid md:grid-cols-3 gap-8">
-        {/* Designs gallery */}
         <div className="md:col-span-2">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             {filteredDesigns.map((design) => (
@@ -83,7 +113,6 @@ export default function ServiceGallery({ params }) {
           {filteredDesigns.length === 0 && <p className="text-center text-gray-500 py-8">No designs in this price range.</p>}
         </div>
 
-        {/* Selected design details + enquiry form */}
         <div className="bg-white p-5 rounded-2xl shadow-soft sticky top-24 h-fit">
           {selectedDesign ? (
             <>
@@ -93,7 +122,7 @@ export default function ServiceGallery({ params }) {
               <p className="text-2xl font-bold text-rose">₹{selectedDesign.price}</p>
               {selectedDesign.description && <p className="text-gray-600 mt-2 whitespace-pre-wrap">{selectedDesign.description}</p>}
               <div className="mt-4">
-                <EnquiryForm designId={selectedDesign.id} serviceName={`${service.title} – Design #${selectedDesign.id}`} />
+                <EnquiryForm designId={selectedDesign.id} serviceName={`${service.title} – Design`} />
               </div>
             </>
           ) : (
