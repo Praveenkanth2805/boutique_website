@@ -16,7 +16,7 @@ export default function EnquiryForm({ serviceId, designId, serviceName }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/enquiries', { ...formData, serviceId, designId });
+      await api.post('/enquiries', { ...formData, designId });
       toast.success('Enquiry sent! We will contact you soon.');
       setFormData({ name: '', address: '', pincode: '', mobile: '' });
     } catch (err) {
@@ -43,20 +43,30 @@ export default function EnquiryForm({ serviceId, designId, serviceName }) {
         required
       />
       <input
-        type="text"
-        placeholder="Pincode"
-        value={formData.pincode}
-        onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
-        className="w-full p-3 border rounded-lg"
-        required
+         type="text"
+         placeholder="Pincode (6 digits)"
+         value={formData.pincode}
+         onChange={(e) => {
+           const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+           setFormData({ ...formData, pincode: val });
+         }}
+         className="w-full p-3 border rounded-lg"
+         required
+         pattern="\d{6}"
+         title="Must be exactly 6 digits"
       />
       <input
         type="tel"
-        placeholder="Mobile Number"
+        placeholder="Mobile Number (10 digits)"
         value={formData.mobile}
-        onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+        onChange={(e) => {
+          const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+          setFormData({ ...formData, mobile: val });
+        }}
         className="w-full p-3 border rounded-lg"
         required
+        pattern="\d{10}"
+        title="Must be exactly 10 digits"
       />
       <button type="submit" className="btn-primary w-full">Send Enquiry</button>
       <div className="text-center mt-4">
