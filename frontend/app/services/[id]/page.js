@@ -54,10 +54,10 @@ export default function ServiceGallery({ params }) {
 
   const filterOptions = [
     { label: 'All', value: 'all' },
-    { label: 'Under ₹5,000', value: '0-5000' },
+    { label: 'Under ₹1,000', value: '0-1000' },
+    { label: '₹1,001 – ₹5,000', value: '1001-5000' },
     { label: '₹5,001 – ₹10,000', value: '5001-10000' },
-    { label: '₹10,001 – ₹20,000', value: '10001-20000' },
-    { label: 'Above ₹20,000', value: '20001-plus' },
+    { label: 'Above ₹10,000', value: '10001-plus' },
   ];
 
   return (
