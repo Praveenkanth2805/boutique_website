@@ -18,9 +18,7 @@ export default function ServiceGallery({ params }) {
       try {
         const res = await api.get(`/services/${params.id}`);
         setService(res.data);
-        if (res.data.designs?.length) {
-          setSelectedDesign(res.data.designs[0]); // highest price first
-        }
+        // No automatic selection – setSelectedDesign remains null
       } catch (err) {
         console.error(err);
       } finally {
@@ -84,6 +82,7 @@ export default function ServiceGallery({ params }) {
                 key={option.value}
                 onClick={() => {
                   setPriceRange(option.value);
+                  setSelectedDesign(null);
                   setFilterOpen(false);
                 }}
                 className={`block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition ${
@@ -97,7 +96,7 @@ export default function ServiceGallery({ params }) {
         )}
       </div>
 
-      {/* Two column layout (unchanged) */}
+      {/* Two column layout */}
       <div className="grid md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -113,6 +112,7 @@ export default function ServiceGallery({ params }) {
           {filteredDesigns.length === 0 && <p className="text-center text-gray-500 py-8">No designs in this price range.</p>}
         </div>
 
+        {/* Right side: show only when design clicked */}
         <div className="bg-white p-5 rounded-2xl shadow-soft sticky top-24 h-fit">
           {selectedDesign ? (
             <>
@@ -126,7 +126,10 @@ export default function ServiceGallery({ params }) {
               </div>
             </>
           ) : (
-            <p className="text-gray-500 text-center">Click a design to see details</p>
+            <div className="text-center py-8 text-gray-500">
+              <p className="text-lg">✨ Click any design to see details</p>
+              <p className="text-sm mt-2">Price, description and enquiry form will appear here</p>
+            </div>
           )}
         </div>
       </div>
