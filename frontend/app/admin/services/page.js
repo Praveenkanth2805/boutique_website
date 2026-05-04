@@ -37,8 +37,9 @@ export default function AdminServices() {
           {services.map((s) => (
             <div key={s.id} className="flex justify-between items-center bg-white p-4 rounded-xl shadow-soft">
               <div>
-                <h3 className="font-semibold">{s.name}</h3>
-                <p className="text-gold">₹{s.price}</p>
+                <h3 className="font-semibold">{s.title}</h3>
+                {/* No price display - multiple designs have individual prices */}
+                <p className="text-sm text-gray-500">{s.category}</p>
               </div>
               <div className="space-x-2">
                 <Link href={`/admin/services/edit/${s.id}`} className="text-blue-600">Edit</Link>

@@ -8,15 +8,25 @@ async function getServices() {
   return res.json();
 }
 
+async function getAllDesigns() {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/services/designs/all`, { cache: 'no-store' });
+  if (!res.ok) return [];
+  return res.json();
+}
+
 export default async function Home() {
   const services = await getServices();
-  const sliderImages = services.slice(0, 5).flatMap(s => s.images).slice(0, 5);
+  const allDesigns = await getAllDesigns();
+  const sliderImages = allDesigns.map(design => ({ imageUrl: design.imageUrl }));
 
   return (
     <div>
+      {/* Top Slider - shows all design images */}
       <section className="mb-12">
         {sliderImages.length > 0 && <ImageSlider images={sliderImages} />}
       </section>
+
+      {/* Services Grid - uses service thumbnail */}
       <section className="container mx-auto px-4 py-12">
         <h2 className="text-4xl font-serif text-center text-rose mb-10">Our Services</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -25,6 +35,8 @@ export default async function Home() {
           ))}
         </div>
       </section>
+
+      {/* About Preview */}
       <section className="bg-pink/30 py-16 text-center">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-serif text-rose">About Our Boutique</h2>

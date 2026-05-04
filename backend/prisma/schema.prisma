@@ -19,7 +19,7 @@ model User {
   otp        String?
   otpExpiry  DateTime?
   createdAt  DateTime  @default(now())
-  enquiries  Enquiry[]
+  enquiries  Enquiry[]  // opposite of Enquiry.user
 }
 
 model Admin {
@@ -33,41 +33,37 @@ model Admin {
 }
 
 model Service {
-  id          Int            @id @default(autoincrement())
-  name        String
-  description String
-  price       Float?          // 👈 make optional (nullable)
-  category    String         @default("Uncategorized")
-  createdAt   DateTime       @default(now())
-  images      ServiceImage[]
-  enquiries   Enquiry[]
+  id          Int             @id @default(autoincrement())
+  title       String
+  description String?         // optional
+  thumbnail   String          // one image URL for service listing
+  category    String          @default("uncategorized")
+  createdAt   DateTime        @default(now())
+  designs     ServiceDesign[] // opposite of ServiceDesign.service
 }
 
-model ServiceImage {
-  id          Int       @id @default(autoincrement())
+model ServiceDesign {
+  id          Int          @id @default(autoincrement())
   serviceId   Int
-  service     Service   @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  imageUrl    String
-  isPrimary   Boolean   @default(false)
-  price       Float?
-  description String?
-  createdAt   DateTime  @default(now())
-  enquiries   Enquiry[] // opposite relation for Enquiry.designId
+  service     Service      @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  imageUrl    String       // design image
+  price       Float        // required
+  description String?      // optional per design
+  createdAt   DateTime     @default(now())
+  enquiries   Enquiry[]    // opposite of Enquiry.design
 }
 
 model Enquiry {
-  id           Int           @id @default(autoincrement())
-  userId       Int?
-  user         User?         @relation(fields: [userId], references: [id])
-  serviceId    Int?
-  service      Service?      @relation(fields: [serviceId], references: [id])
-  designId     Int?
-  serviceImage ServiceImage? @relation(fields: [designId], references: [id])
-  name         String
-  address      String
-  pincode      String
-  mobile       String
-  createdAt    DateTime      @default(now())
+  id        Int           @id @default(autoincrement())
+  userId    Int?
+  user      User?         @relation(fields: [userId], references: [id])
+  designId  Int
+  design    ServiceDesign @relation(fields: [designId], references: [id])
+  name      String
+  address   String
+  pincode   String
+  mobile    String
+  createdAt DateTime      @default(now())
 }
 
 model ContactMessage {

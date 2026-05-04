@@ -31,34 +31,32 @@ CREATE TABLE "Admin" (
 -- CreateTable
 CREATE TABLE "Service" (
     "id" SERIAL NOT NULL,
-    "name" TEXT NOT NULL,
-    "description" TEXT NOT NULL,
-    "price" DOUBLE PRECISION,
-    "category" TEXT NOT NULL DEFAULT 'Uncategorized',
+    "title" TEXT NOT NULL,
+    "description" TEXT,
+    "thumbnail" TEXT NOT NULL,
+    "category" TEXT NOT NULL DEFAULT 'uncategorized',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Service_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "ServiceImage" (
+CREATE TABLE "ServiceDesign" (
     "id" SERIAL NOT NULL,
     "serviceId" INTEGER NOT NULL,
     "imageUrl" TEXT NOT NULL,
-    "isPrimary" BOOLEAN NOT NULL DEFAULT false,
-    "price" DOUBLE PRECISION,
+    "price" DOUBLE PRECISION NOT NULL,
     "description" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "ServiceImage_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "ServiceDesign_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Enquiry" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER,
-    "serviceId" INTEGER,
-    "designId" INTEGER,
+    "designId" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
     "address" TEXT NOT NULL,
     "pincode" TEXT NOT NULL,
@@ -86,13 +84,10 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 CREATE UNIQUE INDEX "Admin_email_key" ON "Admin"("email");
 
 -- AddForeignKey
-ALTER TABLE "ServiceImage" ADD CONSTRAINT "ServiceImage_serviceId_fkey" FOREIGN KEY ("serviceId") REFERENCES "Service"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "ServiceDesign" ADD CONSTRAINT "ServiceDesign_serviceId_fkey" FOREIGN KEY ("serviceId") REFERENCES "Service"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Enquiry" ADD CONSTRAINT "Enquiry_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Enquiry" ADD CONSTRAINT "Enquiry_serviceId_fkey" FOREIGN KEY ("serviceId") REFERENCES "Service"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Enquiry" ADD CONSTRAINT "Enquiry_designId_fkey" FOREIGN KEY ("designId") REFERENCES "ServiceImage"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Enquiry" ADD CONSTRAINT "Enquiry_designId_fkey" FOREIGN KEY ("designId") REFERENCES "ServiceDesign"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -10,10 +10,11 @@ import { getFullImageUrl } from '@/utils/imageUrl';
 export default function EditService() {
   const { id } = useParams();
   const router = useRouter();
-  const [form, setForm] = useState({ name: '', description: '', price: '', category: '' });
-  const [existingImages, setExistingImages] = useState([]);
-  const [newImages, setNewImages] = useState([]);
-  const [newImageDetails, setNewImageDetails] = useState([]);
+  const [form, setForm] = useState({ title: '', description: '', category: '' });
+  const [existingThumbnailUrl, setExistingThumbnailUrl] = useState('');
+  const [newThumbnail, setNewThumbnail] = useState(null);
+  const [designs, setDesigns] = useState([]);        // existing designs
+  const [newDesigns, setNewDesigns] = useState([]);  // new designs to add
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -24,41 +25,47 @@ export default function EditService() {
     const res = await api.get(`/services/${id}`);
     const s = res.data;
     setForm({
-      name: s.name,
-      description: s.description,
-      price: s.price || '',
-      category: s.category || 'Uncategorized',
+      title: s.title,
+      description: s.description || '',
+      category: s.category || 'uncategorized',
     });
-    setExistingImages(s.images || []);
+    setExistingThumbnailUrl(s.thumbnail);
+    setDesigns(s.designs || []);
   };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
     setLoading(true);
     const formData = new FormData();
-    formData.append('name', form.name);
+    formData.append('title', form.title);
     formData.append('description', form.description);
-    formData.append('price', form.price);
     formData.append('category', form.category);
+    if (newThumbnail) formData.append('thumbnail', newThumbnail);
 
-    // Prepare existing images details (price, description, isPrimary)
-    const imagesDetails = existingImages.map(img => ({
-      id: img.id,
-      price: img.price || '',
-      description: img.description || '',
-      isPrimary: img.isPrimary,
+    // Prepare existing designs data (update only non‑deleted)
+    const existingDesignsData = designs
+      .filter(d => !d._deleted)
+      .map(d => ({
+        id: d.id,
+        price: d.price,
+        description: d.description || '',
+      }));
+    formData.append('existingDesigns', JSON.stringify(existingDesignsData));
+
+    // Deleted design IDs
+    const deletedIds = designs.filter(d => d._deleted).map(d => d.id);
+    formData.append('deletedDesignIds', JSON.stringify(deletedIds));
+
+    // New designs data (without file)
+    const newDesignsData = newDesigns.map(d => ({
+      price: d.price,
+      description: d.description || '',
     }));
-    formData.append('imagesDetails', JSON.stringify(imagesDetails));
-
-    // Collect IDs of images marked for deletion
-    const deletedIds = existingImages.filter(img => img._deleted).map(img => img.id);
-    formData.append('deletedImageIds', JSON.stringify(deletedIds));
-
-    // Append new image files and their details
-    for (let i = 0; i < newImages.length; i++) {
-      formData.append('newImages', newImages[i]);
-    }
-    formData.append('newImagesDetails', JSON.stringify(newImageDetails));
+    formData.append('newDesigns', JSON.stringify(newDesignsData));
+    // Append new design image files
+    newDesigns.forEach(d => {
+      if (d.imageFile) formData.append('newDesignImages', d.imageFile);
+    });
 
     const token = localStorage.getItem('adminToken');
     try {
@@ -66,183 +73,165 @@ export default function EditService() {
         headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` },
       });
       toast.success('Service updated successfully');
-      setNewImages([]);
-      setNewImageDetails([]);
-      fetchService(); // refresh images
+      router.push('/admin/services');
     } catch (err) {
-      if (err.response?.status === 413) {
-        toast.error('File too large. Max size 5MB.');
-      } else {
-        toast.error(err.response?.data?.message || 'Update failed');
-      }
+      toast.error(err.response?.data?.message || 'Update failed');
     } finally {
       setLoading(false);
     }
   };
 
-  const updateExistingImage = (index, field, value) => {
-    const updated = [...existingImages];
+  const updateDesign = (index, field, value) => {
+    const updated = [...designs];
     updated[index][field] = value;
-    setExistingImages(updated);
+    setDesigns(updated);
   };
 
-  const markImageForDeletion = (index) => {
-    const updated = [...existingImages];
+  const markDesignForDeletion = (index) => {
+    const updated = [...designs];
     updated[index]._deleted = true;
-    setExistingImages(updated);
+    setDesigns(updated);
   };
 
-  const setPrimaryImage = (index) => {
-    const updated = existingImages.map((img, i) => ({
-      ...img,
-      isPrimary: i === index,
-    }));
-    setExistingImages(updated);
+  const addNewDesign = () => {
+    setNewDesigns([...newDesigns, { imageFile: null, price: '', description: '' }]);
   };
 
-  const handleNewImages = (e) => {
-    const files = Array.from(e.target.files);
-    setNewImages(files);
-    setNewImageDetails(files.map(() => ({ price: '', description: '' })));
-  };
-
-  const updateNewImageDetail = (index, field, value) => {
-    const updated = [...newImageDetails];
+  const updateNewDesign = (index, field, value) => {
+    const updated = [...newDesigns];
     updated[index][field] = value;
-    setNewImageDetails(updated);
+    setNewDesigns(updated);
   };
 
-  const removeNewImage = (index) => {
-    const updatedFiles = [...newImages];
-    const updatedDetails = [...newImageDetails];
-    updatedFiles.splice(index, 1);
-    updatedDetails.splice(index, 1);
-    setNewImages(updatedFiles);
-    setNewImageDetails(updatedDetails);
+  const removeNewDesign = (index) => {
+    const updated = [...newDesigns];
+    updated.splice(index, 1);
+    setNewDesigns(updated);
+  };
+
+  const handleNewDesignImage = (index, file) => {
+    const updated = [...newDesigns];
+    updated[index].imageFile = file;
+    setNewDesigns(updated);
   };
 
   return (
     <AdminRoute>
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <h1 className="text-3xl font-serif text-rose mb-6">Edit Service Category</h1>
-
+        <h1 className="text-3xl font-serif text-rose mb-6">Edit Service</h1>
         <form onSubmit={handleUpdate} className="space-y-4 bg-white p-6 rounded-2xl shadow-soft mb-8">
           <input
             type="text"
-            placeholder="Category Name (e.g., Bridal Lehengas)"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            placeholder="Service Title"
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
             className="w-full p-3 border rounded-lg"
             required
           />
           <textarea
-            placeholder="Category Description"
+            placeholder="Service Description (optional)"
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             className="w-full p-3 border rounded-lg"
-            required
-          />
-          <input
-            type="number"
-            placeholder="Default Price (optional, if all designs share same)"
-            value={form.price}
-            onChange={(e) => setForm({ ...form, price: e.target.value })}
-            className="w-full p-3 border rounded-lg"
+            rows="3"
           />
           <input
             type="text"
             placeholder="Category Slug (e.g., bridal)"
             value={form.category}
-            onChange={(e) => setForm({ ...form, category: e.target.value })}
+            onChange={(e) => setForm({ ...form, category: e.target.value.toLowerCase().replace(/\s/g, '-') })}
             className="w-full p-3 border rounded-lg"
             required
           />
 
-          {/* Existing images with editable price/description */}
+          {/* Thumbnail */}
           <div>
+            <label className="block font-semibold mb-1">Thumbnail Image</label>
+            {existingThumbnailUrl && !newThumbnail && (
+              <div className="mb-2">
+                <Image src={getFullImageUrl(existingThumbnailUrl)} alt="thumbnail" width={150} height={150} className="rounded" />
+                <p className="text-sm text-gray-500">Current thumbnail</p>
+              </div>
+            )}
+            <input type="file" accept="image/*" onChange={(e) => setNewThumbnail(e.target.files[0])} className="w-full" />
+          </div>
+
+          {/* Existing Designs */}
+          <div className="border-t pt-4">
             <h2 className="text-xl font-serif text-rose mb-3">Existing Designs</h2>
+            {designs.filter(d => !d._deleted).length === 0 && <p className="text-gray-500">No designs yet.</p>}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {existingImages.map((img, idx) => (
-                !img._deleted && (
-                  <div key={img.id} className="border p-3 rounded-lg relative">
+              {designs.map((design, idx) => (
+                !design._deleted && (
+                  <div key={design.id} className="border p-3 rounded-lg relative">
                     <div className="relative h-32 w-full mb-2">
-                      <Image
-                        src={getFullImageUrl(img.imageUrl)}
-                        alt="design"
-                        fill
-                        className="object-cover rounded"
-                      />
+                      <Image src={getFullImageUrl(design.imageUrl)} alt="design" fill className="object-cover rounded" />
                     </div>
                     <input
                       type="number"
-                      placeholder="Price for this design"
-                      value={img.price || ''}
-                      onChange={(e) => updateExistingImage(idx, 'price', e.target.value)}
+                      placeholder="Price (₹)"
+                      value={design.price}
+                      onChange={(e) => updateDesign(idx, 'price', parseFloat(e.target.value))}
                       className="w-full p-2 border rounded mb-2"
+                      required
                     />
                     <textarea
-                      placeholder="Description for this design"
-                      value={img.description || ''}
-                      onChange={(e) => updateExistingImage(idx, 'description', e.target.value)}
+                      placeholder="Description (optional)"
+                      value={design.description || ''}
+                      onChange={(e) => updateDesign(idx, 'description', e.target.value)}
                       className="w-full p-2 border rounded mb-2"
                       rows="2"
                     />
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setPrimaryImage(idx)}
-                        className={`text-xs px-2 py-1 rounded ${img.isPrimary ? 'bg-rose text-white' : 'bg-gray-200'}`}
-                      >
-                        {img.isPrimary ? 'Primary' : 'Set Primary'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => markImageForDeletion(idx)}
-                        className="bg-red-500 text-white text-xs px-2 py-1 rounded"
-                      >
-                        Delete
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => markDesignForDeletion(idx)}
+                      className="bg-red-500 text-white text-xs px-2 py-1 rounded"
+                    >
+                      Delete Design
+                    </button>
                   </div>
                 )
               ))}
             </div>
-            {existingImages.filter(img => !img._deleted).length === 0 && (
-              <p className="text-gray-500 mt-2">No designs yet. Add some below.</p>
-            )}
           </div>
 
-          {/* New images upload with price/description */}
+          {/* Add New Designs */}
           <div>
-            <label className="block font-semibold mb-2">Add New Designs</label>
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={handleNewImages}
-              className="w-full"
-            />
-            {newImages.map((file, idx) => (
+            <div className="flex justify-between items-center mb-3">
+              <h2 className="text-xl font-serif text-rose">Add New Designs</h2>
+              <button type="button" onClick={addNewDesign} className="bg-rose text-white px-3 py-1 rounded-lg text-sm">+ Add Design</button>
+            </div>
+            {newDesigns.map((design, idx) => (
               <div key={idx} className="border p-3 rounded-lg mt-2 relative">
                 <button
                   type="button"
-                  onClick={() => removeNewImage(idx)}
-                  className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded"
+                  onClick={() => removeNewDesign(idx)}
+                  className="absolute top-2 right-2 text-red-500"
                 >
-                  Remove
+                  ✕
                 </button>
-                <p className="font-medium mb-2">{file.name}</p>
+                <div className="mb-2">
+                  <label className="block text-sm font-medium">Design Image *</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleNewDesignImage(idx, e.target.files[0])}
+                    className="w-full"
+                    required
+                  />
+                </div>
                 <input
                   type="number"
-                  placeholder="Price for this design"
-                  value={newImageDetails[idx]?.price || ''}
-                  onChange={(e) => updateNewImageDetail(idx, 'price', e.target.value)}
+                  placeholder="Price (₹) *"
+                  value={design.price}
+                  onChange={(e) => updateNewDesign(idx, 'price', parseFloat(e.target.value))}
                   className="w-full p-2 border rounded mb-2"
+                  required
                 />
                 <textarea
-                  placeholder="Description for this design"
-                  value={newImageDetails[idx]?.description || ''}
-                  onChange={(e) => updateNewImageDetail(idx, 'description', e.target.value)}
+                  placeholder="Description (optional)"
+                  value={design.description}
+                  onChange={(e) => updateNewDesign(idx, 'description', e.target.value)}
                   className="w-full p-2 border rounded mb-2"
                   rows="2"
                 />

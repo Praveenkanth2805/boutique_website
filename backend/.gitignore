@@ -4,3 +4,4 @@ uploads/
 dev.db
 dev.db-journal
 .seedlocal.js 
+.backup.sql
