@@ -54,7 +54,7 @@ export default function Navbar() {
           <Link href="/services" className="hover:text-rose">Services</Link>
           <Link href="/about" className="hover:text-rose">About</Link>
           <Link href="/contact" className="hover:text-rose">Contact</Link>
-          {user ? (
+          {/* {user ? (
             <>
               <Link href="/profile" className="hover:text-rose">Profile</Link>
               <button onClick={logout} className="hover:text-rose">Logout</button>
@@ -64,7 +64,7 @@ export default function Navbar() {
               <Link href="/login" className="hover:text-rose">Login</Link>
               <Link href="/register" className="hover:text-rose">Register</Link>
             </>
-          )}
+          )} */}
         </div>
         <button className="md:hidden text-2xl" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>☰</button>
       </div>
@@ -74,7 +74,7 @@ export default function Navbar() {
           <Link href="/services" onClick={() => setMobileMenuOpen(false)}>Services</Link>
           <Link href="/about" onClick={() => setMobileMenuOpen(false)}>About</Link>
           <Link href="/contact" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
-          {user ? (
+          {/* {user ? (
             <>
               <Link href="/profile" onClick={() => setMobileMenuOpen(false)}>Profile</Link>
               <button onClick={() => { logout(); setMobileMenuOpen(false); }}>Logout</button>
@@ -84,7 +84,7 @@ export default function Navbar() {
               <Link href="/login" onClick={() => setMobileMenuOpen(false)}>Login</Link>
               <Link href="/register" onClick={() => setMobileMenuOpen(false)}>Register</Link>
             </>
-          )}
+          )} */}
         </div>
       )}
     </nav>

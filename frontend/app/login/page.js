@@ -36,12 +36,12 @@ export default function Login() {
           />
           <button type="submit" className="btn-primary w-full">Login</button>
         </form>
-        <p className="mt-4 text-center">
+        {/* <p className="mt-4 text-center">
           Don't have an account? <Link href="/register" className="text-rose">Register</Link>
-        </p>
-        <p className="mt-2 text-center text-sm">
+        </p> */}
+        {/* <p className="mt-2 text-center text-sm">
           Admin? <Link href="/admin/login" className="text-rose underline">Login here</Link>
-        </p>
+        </p> */}
       </div>
     </div>
   );
