@@ -4,8 +4,13 @@ import Footer from '@/components/Footer';
 import { AuthProvider } from '@/context/AuthContext';
 import { Toaster } from 'react-hot-toast';
 import DynamicTitle from "@/components/DynamicTitle";
+import { GoogleAnalytics } from '@next/third-parties/google'; 
 
 export const metadata = {
+  metadataBase: process.env.NEXT_PUBLIC_SITE_URL
+    ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
+    : new URL('http://localhost:3000'),
+    
   title: {
     default: `${process.env.NEXT_PUBLIC_NAME} | Villupuram`,
     template: `%s | ${process.env.NEXT_PUBLIC_NAME}`,
@@ -55,6 +60,10 @@ export default function RootLayout({ children }) {
           <Footer />
           <Toaster position="top-center" />
         </AuthProvider>
+        {/* Add this line exactly here, before </body> */}
+        {process.env.NODE_ENV === 'production' && (
+          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+        )}
       </body>
     </html>
   );

@@ -1,3 +1,35 @@
+// Server-side metadata (runs on server)
+import { getFullImageUrl } from '@/utils/imageUrl';
+
+export async function generateMetadata({ params }) {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  const res = await fetch(`${apiUrl}/services/${params.id}`);
+  const service = await res.json();
+  const firstDesign = service.designs?.[0];
+  const priceText = firstDesign ? ` – ₹${firstDesign.price}` : '';
+  const title = `${service.title}${priceText} | ${process.env.NEXT_PUBLIC_NAME}`;
+  const description = service.description || `Explore our exclusive ${service.title.toLowerCase()} collection`;
+  const imageUrl = firstDesign ? getFullImageUrl(firstDesign.imageUrl) : `${baseUrl}/og-image.jpg`;
+  
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `${baseUrl}/services/${params.id}`,
+      images: [{ url: imageUrl, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [imageUrl],
+    },
+  };
+}
+
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';

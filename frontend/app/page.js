@@ -2,6 +2,14 @@ import ImageSlider from '@/components/ImageSlider';
 import ServiceCard from '@/components/ServiceCard';
 import Link from 'next/link';
 
+export const metadata = {
+  title: `Home | ${process.env.NEXT_PUBLIC_NAME}`,
+  description: 'Discover the latest bridal lehengas, designer sarees, and custom stitching services in Villupuram.',
+  alternates: {
+    canonical: process.env.NEXT_PUBLIC_SITE_URL,
+  },
+};
+
 async function getServices() {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/services`, { cache: 'no-store' });
   if (!res.ok) return [];
