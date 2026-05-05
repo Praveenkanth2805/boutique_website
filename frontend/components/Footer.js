@@ -26,7 +26,7 @@ export default function Footer() {
           </div>
         </div>
       </div>
-      <div className="text-center text-gray-500 text-sm mt-8">© 2026 Boutique. All rights reserved.</div>
+      <div className="text-center text-gray-500 text-sm mt-8">© 2026 {process.env.NEXT_PUBLIC_NAME}. All rights reserved.</div>
     </footer>
   );
 }
