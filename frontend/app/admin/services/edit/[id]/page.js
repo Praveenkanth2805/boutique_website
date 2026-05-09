@@ -182,13 +182,28 @@ export default function EditService() {
                       className="w-full p-2 border rounded mb-2"
                       rows="2"
                     />
-                    <button
-                      type="button"
-                      onClick={() => markDesignForDeletion(idx)}
-                      className="bg-red-500 text-white text-xs px-2 py-1 rounded"
-                    >
-                      Delete Design
-                    </button>
+                   <button
+                    type="button"
+                    onClick={async () => {
+                      if (window.confirm('⚠️ Are you sure you want to permanently delete this design? This action cannot be undone.')) {
+                        const token = localStorage.getItem('adminToken');
+                        try {
+                          await api.delete(`/admin/designs/${design.id}`, {
+                            headers: { Authorization: `Bearer ${token}` },
+                          });
+                          toast.success('Design deleted');
+                          // Remove from UI immediately
+                          const updatedDesigns = designs.filter((_, i) => i !== idx);
+                          setDesigns(updatedDesigns);
+                        } catch (err) {
+                          toast.error('Failed to delete design');
+                        }
+                      }
+                    }}
+                    className="bg-red-500 text-white text-xs px-2 py-1 rounded"
+                  >
+                    Delete Design
+                  </button>
                   </div>
                 )
               ))}
