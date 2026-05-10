@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { PrismaClient } = require('@prisma/client');
 const auth = require('../middleware/auth');
+const { sendEnquiryEmail } = require('../utils/emailService');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -18,13 +19,14 @@ router.post(
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { name, address, pincode, mobile, designId } = req.body; // ✅ only designId
+    const { name, address, pincode, mobile, designId } = req.body;
     const userId = req.user?.id || null;
 
     if (!designId) {
       return res.status(400).json({ message: 'designId is required' });
     }
 
+    // Save enquiry to database
     const enquiry = await prisma.enquiry.create({
       data: {
         userId,
@@ -35,6 +37,31 @@ router.post(
         mobile,
       },
     });
+
+    // Fetch design details for email (including service title and image)
+    const design = await prisma.serviceDesign.findUnique({
+      where: { id: parseInt(designId) },
+      include: { service: true },
+    });
+
+    // Send email notification to admin (do not block response if email fails)
+    if (design) {
+      try {
+        await sendEnquiryEmail({
+          name,
+          mobile,
+          address,
+          pincode,
+          serviceTitle: design.service.title,
+          designTitle: `Design #${design.id}`,
+          designImageUrl: design.imageUrl,
+        });
+      } catch (emailErr) {
+        console.error('Failed to send email notification:', emailErr);
+        // Don't return error to user; just log
+      }
+    }
+
     res.status(201).json(enquiry);
   }
 );

@@ -74,4 +74,65 @@ async function sendContactEmail(name, email, message) {
   return info;
 }
 
-module.exports = { sendOTPEmail, sendContactEmail };
+async function sendEnquiryEmail({ name, mobile, address, pincode, serviceTitle, designTitle, designImageUrl }) {
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Poppins', Arial, sans-serif; background-color: #f9f9f9; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .header { background: linear-gradient(135deg, #E75480, #F8C8DC); padding: 30px; text-align: center; }
+        .header h1 { color: white; margin: 0; font-size: 28px; font-family: 'Playfair Display', serif; }
+        .content { padding: 30px; }
+        .field { margin-bottom: 15px; }
+        .field-label { font-weight: 600; color: #E75480; display: inline-block; width: 100px; }
+        .design-image { max-width: 100%; border-radius: 12px; margin-top: 10px; border: 1px solid #eee; }
+        .footer { background: #f8f8f8; padding: 20px; text-align: center; font-size: 12px; color: #888; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>📬 New Design Enquiry</h1>
+        </div>
+        <div class="content">
+          <div class="field">
+            <span class="field-label">👤 Name:</span> ${name}
+          </div>
+          <div class="field">
+            <span class="field-label">📞 Mobile:</span> ${mobile}
+          </div>
+          <div class="field">
+            <span class="field-label">📍 Address:</span> ${address}, ${pincode}
+          </div>
+          <div class="field">
+            <span class="field-label">💍 Service:</span> ${serviceTitle}
+          </div>
+          <div class="field">
+            <span class="field-label">🎨 Design ID:</span> ${designTitle}
+          </div>
+          ${designImageUrl ? `<div class="field"><span class="field-label">🖼️ Design:</span><br/><img src="${designImageUrl}" class="design-image" alt="Design" /></div>` : ''}
+        </div>
+        <div class="footer">
+          <p>Boutique Website | Customer enquiry received</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const mailOptions = {
+    from: `"Boutique Enquiry" <${process.env.EMAIL_USER}>`,
+    to: process.env.ADMIN_EMAIL,
+    subject: `📌 New Enquiry for ${serviceTitle} - ${designTitle}`,
+    html: htmlContent,
+  };
+
+  const info = await transporter.sendMail(mailOptions);
+  console.log('Enquiry email sent with image:', info.messageId);
+  return info;
+}
+
+module.exports = { sendOTPEmail, sendContactEmail,sendEnquiryEmail };
