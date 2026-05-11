@@ -210,7 +210,17 @@ router.delete('/designs/:designId', adminAuth, async (req, res) => {
 
 // ========== EXISTING ROUTES (enquiries, stats, contact) – unchanged ==========
 router.get('/enquiries', adminAuth, async (req, res) => {
-  const enquiries = await prisma.enquiry.findMany({ include: { user: true, design: true }, orderBy: { createdAt: 'desc' } });
+  const enquiries = await prisma.enquiry.findMany({
+     include: {
+       user: true,
+       design: {
+          include: {
+            service: true 
+           }
+          }
+        },
+      orderBy: { createdAt: 'desc' } 
+    });
   res.json(enquiries);
 });
 

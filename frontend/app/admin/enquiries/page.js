@@ -36,7 +36,7 @@ export default function AdminEnquiries() {
                   <td className="p-4">{e.name}</td>
                   <td className="p-4">{e.mobile}</td>
                   <td className="p-4">{e.address}, {e.pincode}</td>
-                  <td className="p-4">{e.service?.name || 'N/A'}</td>
+                  <td className="p-4">{e.design?.service?.title || 'N/A'}</td>
                   <td className="p-4">{new Date(e.createdAt).toLocaleDateString()}</td>
                 </tr>
               ))}
