@@ -5,8 +5,10 @@ import api from '@/utils/api';
 
 export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', message: '' });
+  const [loading, setLoading] = useState(false);
   const handleSubmit = async (e) => {
   e.preventDefault();
+  setLoading(true);
   try {
     await api.post('/contact', form);
     toast.success('Message sent! We will get back to you soon.');
@@ -18,6 +20,8 @@ export default function Contact() {
     } else {
       toast.error(err.response?.data?.message || 'Failed to send message');
     }
+  }finally {
+    setLoading(false);
   }
 };
   return (
@@ -28,7 +32,9 @@ export default function Contact() {
           <input type="text" placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full p-3 border rounded-lg" required />
           <input type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full p-3 border rounded-lg" required />
           <textarea placeholder="Message" rows={5} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} className="w-full p-3 border rounded-lg" required />
-          <button type="submit" className="btn-primary w-full">Send Message</button>
+          <button type="submit" disabled={loading} className="btn-primary w-full" >
+            {loading ? 'Sending...' : 'Send Message'}
+          </button>
         </form>
         <div className="mt-8 text-center">
           <p className="text-gray-600">Or reach us directly:</p>
