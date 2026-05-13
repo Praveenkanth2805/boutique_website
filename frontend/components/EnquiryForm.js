@@ -6,6 +6,7 @@ import api from '@/utils/api';
 
 export default function EnquiryForm({ serviceId, designId, serviceName }) {
   const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || '',
     address: user?.address || '',
@@ -15,12 +16,15 @@ export default function EnquiryForm({ serviceId, designId, serviceName }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       await api.post('/enquiries', { ...formData, designId });
       toast.success('Enquiry sent! We will contact you soon.');
       setFormData({ name: '', address: '', pincode: '', mobile: '' });
     } catch (err) {
       toast.error('Failed to send enquiry');
+    } finally{
+      setLoading(false);
     }
   };
 
@@ -68,7 +72,9 @@ export default function EnquiryForm({ serviceId, designId, serviceName }) {
         pattern="\d{10}"
         title="Must be exactly 10 digits"
       />
-      <button type="submit" className="btn-primary w-full">Send Enquiry</button>
+      <button type="submit" disabled={loading} className="btn-primary w-full">
+        {loading ? "sending..." : "Send Enquiry"}
+        </button>
       <div className="text-center mt-4">
         <a href={process.env.NEXT_PUBLIC_INSTAGRAM_URL} target="_blank" className="text-rose underline">
           Or DM us on Instagram
