@@ -1,31 +1,30 @@
-const nodemailer = require('nodemailer');
+const SibApiV3Sdk = require('sib-api-v3-sdk');
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const defaultClient = SibApiV3Sdk.ApiClient.instance;
 
-transporter.verify((error, success) => {
-  if (error) {
-    console.log('SMTP Error:', error);
-  } else {
-    console.log('SMTP Server Ready');
-  }
-});
+const apiKey = defaultClient.authentications['api-key'];
+
+apiKey.apiKey = process.env.BREVO_API_KEY;
+
+const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 
 async function sendOTPEmail(to, otp) {
-  const mailOptions = {
-    from: `"Boutique" <${process.env.EMAIL_USER}>`,
-    to,
-    subject: 'Your OTP for Verification',
-    html: `<p>Your OTP is <strong>${otp}</strong>. It expires in 10 minutes.</p>`,
+  const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
+
+  sendSmtpEmail.sender = {
+    name: 'Boutique',
+    email: process.env.EMAIL_USER,
   };
-  await transporter.sendMail(mailOptions);
+
+  sendSmtpEmail.to = [{ email: to }];
+
+  sendSmtpEmail.subject = 'Your OTP for Verification';
+
+  sendSmtpEmail.htmlContent = `
+    <p>Your OTP is <strong>${otp}</strong>. It expires in 10 minutes.</p>
+  `;
+
+  await apiInstance.sendTransacEmail(sendSmtpEmail);
 }
 
 // Add at the bottom of the file
@@ -72,16 +71,24 @@ async function sendContactEmail(name, email, message) {
     </html>
   `;
 
-  const mailOptions = {
-    from: `"Boutique Contact" <${process.env.EMAIL_USER}>`,
-    to: process.env.ADMIN_EMAIL,
-    subject: `💌 New Contact Message from ${name}`,
-    html: htmlContent,
+  const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
+
+  sendSmtpEmail.sender = {
+    name: 'Boutique Contact',
+    email: process.env.EMAIL_USER,
   };
 
-  const info = await transporter.sendMail(mailOptions);
-  console.log('Email sent:', info.messageId);
-  return info;
+  sendSmtpEmail.to = [
+    {
+      email: process.env.ADMIN_EMAIL,
+    },
+  ];
+
+  sendSmtpEmail.subject = `💌 New Contact Message from ${name}`;
+  sendSmtpEmail.htmlContent = htmlContent;
+  const response = await apiInstance.sendTransacEmail(sendSmtpEmail);
+  console.log('Email sent:', response);
+  return response;
 }
 
 async function sendEnquiryEmail({ name, mobile, address, pincode, serviceTitle, designTitle, designImageUrl }) {
@@ -133,16 +140,24 @@ async function sendEnquiryEmail({ name, mobile, address, pincode, serviceTitle, 
     </html>
   `;
 
-  const mailOptions = {
-    from: `"Boutique Enquiry" <${process.env.EMAIL_USER}>`,
-    to: process.env.ADMIN_EMAIL,
-    subject: `📌 New Enquiry for ${serviceTitle} - ${designTitle}`,
-    html: htmlContent,
+  const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
+
+  sendSmtpEmail.sender = {
+    name: 'Boutique Enquiry',
+    email: process.env.EMAIL_USER,
   };
 
-  const info = await transporter.sendMail(mailOptions);
-  console.log('Enquiry email sent with image:', info.messageId);
-  return info;
+  sendSmtpEmail.to = [
+    {
+      email: process.env.ADMIN_EMAIL,
+    },
+  ];
+
+  sendSmtpEmail.subject = `📌 New Enquiry for ${serviceTitle} - ${designTitle}`;
+  sendSmtpEmail.htmlContent = htmlContent;
+  const response = await apiInstance.sendTransacEmail(sendSmtpEmail);
+  console.log('Enquiry email sent:', response);
+  return response;
 }
 
 module.exports = { sendOTPEmail, sendContactEmail,sendEnquiryEmail };
